@@ -96,23 +96,20 @@ function Customers({
       )}
 
       {customers.map((customer) => (
-        <div key={customer.customerId}>
-          <p>
-            <strong>{customer.customerId}</strong>
-            {" - "}
-            {customer.name}
-            {" - "}
-            {customer.email}
-            {" - "}
-            {customer.phone}
-          </p>
-
-          {/* EDIT CUSTOMER */}
-          <button onClick={() => editCustomer(customer)}>
-            Edit
-          </button>
-        </div>
-      ))}
+      <p key={customer.customerId}>
+        <strong>{customer.customerId}</strong>
+        {" - "}
+        {customer.name}
+        {" - "}
+        {customer.email}
+        {" - "}
+        {customer.phone}
+        {" "}
+        <button onClick={() => editCustomer(customer)}>
+          Edit
+        </button>
+      </p>
+    ))}
     </div>
   )
 }
