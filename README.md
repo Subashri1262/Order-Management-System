@@ -1,179 +1,102 @@
 # Order Management System (OMS)
 
-A simple Order Management System built to manage the business workflow from customer registration and estimation to proposal approval, order processing, work order allocation and project creation.
+## About the Project
 
-This project is being developed step by step using React, TypeScript, Python (FastAPI), MySQL and Docker.
+The Order Management System (OMS) is a web application designed to manage the complete customer order lifecycle, from estimation to project execution, invoicing and job closure.
 
-## Project Overview
+The main goal is to make order tracking and project management simple and organized.
 
-The Order Management System (OMS) is designed to streamline business operations by connecting customers, estimations, proposals, orders, work orders and projects in one application.
+## Technologies Used
 
-The goal is to build a simple and practical system that manages the complete order lifecycle while maintaining relationships between different business modules.
+### Frontend
+- React
+- TypeScript
+- Vite
+- CSS
 
-## Business Workflow
+### Backend (Planned)
+- Python
+- FastAPI
+- MySQL
+- JWT Authentication
+- Role-Based Access Control (RBAC)
 
-The planned business workflow is:
+### Deployment (Planned)
+- Docker
+- Docker Compose
 
-1. Customer Registration
-2. Estimation Creation and Approval
-3. Proposal Creation and Submission
-4. Proposal Review and Revision
-5. Client Acceptance
-6. Order Creation
-7. Order Review and Approval
-8. Formal Purchase Order Receipt
-9. Order Acceptance
-10. Work Order Creation
-11. Project Creation
-12. Project Execution
-13. Milestone Invoicing
-14. Job Closure
+## Frontend Modules
 
-## Modules
+1. **Dashboard** – Displays an overview of the system.
+2. **Customers** – Manage customer information.
+3. **Estimation** – Create customer estimates.
+4. **Proposals** – Manage proposals and revisions.
+5. **Orders** – Manage client orders.
+6. **Projects & Work Orders** – Manage projects and internal work orders.
+7. **Execution & Invoicing** – Update work progress and manage milestone invoices.
+8. **Job Closure** – Close completed work orders and projects.
 
-- **Dashboard** – Displays key business information and summary counts.
-- **Customers** – Create, view and edit customer records.
-- **Estimation** – Create service-based estimations linked to existing customers and manage approval.
-- **Proposals** – Create proposals from approved estimations, manage proposal status and maintain revision history.
-- **Orders** – Create orders from accepted proposals and manage the order approval and acceptance workflow.
-- **Work Orders** – Create work orders from accepted orders and prevent duplicate work orders for the same order.
-- **Projects** – Create projects from eligible work orders and maintain their relationship with the originating work order.
+## Order Management Workflow
 
-## Current Progress
+Customer → Estimation → Proposal → Client Acceptance → Order → Work Order → Project → Execution → Invoicing → Job Closure
 
-### Completed – Frontend
+## Current Project Status
 
-- Dashboard with summary cards.
-- Customer creation and editing.
-- Estimation creation linked to existing customers.
-- Estimation approval workflow.
-- Proposal creation from approved estimations.
-- Proposal status workflow:
-  - Draft
-  - In Review
-  - Approved
-  - Sent to Client
-  - Accepted
-- Proposal revision creation and revision history.
-- Order creation from accepted proposals.
-- Order workflow:
-  - Draft
-  - In Review
-  - Approved
-  - Formal Order Received
-  - Order Accepted
-- Formal Purchase Order number and date recording.
-- Order editing restrictions after acceptance.
-- Work order creation from accepted orders.
-- Duplicate work order prevention.
-- Project creation from eligible work orders.
-- Duplicate project prevention.
-- Dependency handling when deleting an order, including linked work orders and projects.
-- Navigation between application modules.
+- [x] Frontend development
+- [x] All 8 frontend modules connected
+- [x] Frontend production build successful
+- [x] Frontend workflow testing completed
+- [ ] Backend development
+- [ ] MySQL database integration
+- [ ] User authentication using JWT
+- [ ] Role-Based Access Control (RBAC)
+- [ ] Frontend and backend integration
+- [ ] Testing
+- [ ] Docker deployment
 
-### Planned – Future Development
+## How to Run the Frontend
 
-- Backend API development using FastAPI.
-- MySQL database integration.
-- Data persistence.
-- User authentication and role-based access.
-- Project execution and progress tracking.
-- Milestone-based invoicing.
-- Job and project closure.
-- Testing and validation.
-- Docker-based deployment.
+### 1. Clone the Repository
 
-## Technology Stack
-
-| Technology | Purpose |
-|---|---|
-| React | Frontend UI |
-| TypeScript | Frontend programming language |
-| Vite | Frontend development server |
-| Python | Backend programming language |
-| FastAPI | Backend API framework |
-| MySQL | Database |
-| Docker | Containerization |
-
-## Project Structure
-
-```text
-Order-Management-System/
-|
-|-- frontend/
-|   |-- public/
-|   |-- src/
-|       |-- App.tsx
-|       |-- Customers.tsx
-|       |-- Estimation.tsx
-|       |-- Proposal.tsx
-|       |-- Dashboard.tsx
-|       |-- Navbar.tsx
-|       |-- CreateOrder.tsx
-|       |-- OrderList.tsx
-|       |-- EditOrder.tsx
-|       |-- ProjectsWorkOrders.tsx
-|       |-- types.ts
-|       |-- App.css
-|       |-- index.css
-|       |-- main.tsx
-|
-|-- backend/
-|
-|-- database/
-|
-|-- .gitignore
-|-- README.md
+```bash
+git clone <your-github-repository-url>
 ```
 
-## Running the Frontend
+### 2. Navigate to the Frontend Folder
 
-### Prerequisites
+```bash
+cd Order-Management-System/frontend
+```
 
-- Node.js
-- npm
-- Git
+### 3. Install Dependencies
 
-### Installation Steps
+```bash
+npm install
+```
 
-1. Clone the repository:
+### 4. Start the Development Server
 
-   ```bash
-   git clone https://github.com/Subashri1262/Order-Management-System.git
-   ```
+```bash
+npm run dev
+```
 
-2. Navigate to the frontend directory:
+Open the local URL displayed in the terminal to access the application.
 
-   ```bash
-   cd Order-Management-System/frontend
-   ```
+### 5. Create Production Build
 
-3. Install dependencies:
+```bash
+npm run build
+```
 
-   ```bash
-   npm install
-   ```
+## Future Enhancements
 
-4. Start the development server:
+- Develop REST APIs using FastAPI.
+- Store application data in MySQL.
+- Implement JWT-based authentication.
+- Implement role-based access control.
+- Connect the frontend with the backend.
+- Containerize the application using Docker Compose.
 
-   ```bash
-   npm run dev
-   ```
+---
 
-5. Open the application in your browser:
-
-   ```text
-   http://localhost:5173
-   ```
-
-## Development Status
-
-The core frontend modules have been implemented, and the main business workflows have been tested.
-
-The project is currently in the frontend review stage. Backend development, database integration and deployment will be taken up in subsequent phases.
-
-Data is currently managed within the frontend application and is not yet persisted in a database.
-
-## Author
-
-Developed as a learning and development project to build a simple, practical Order Management System.
+**Project Status:** Frontend Completed | Backend Upcoming
