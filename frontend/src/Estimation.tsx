@@ -144,7 +144,7 @@ function Estimation({
       {/* ESTIMATED AMOUNT */}
       <input
         type="number"
-        placeholder="Enter Estimated Amount (₹)"
+        placeholder="Enter Estimated Amount"
         value={estimatedAmount}
         onChange={(e) => setEstimatedAmount(e.target.value)}
       />

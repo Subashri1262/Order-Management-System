@@ -1,3 +1,4 @@
+
 import { useState } from 'react'
 import type { Customer, EstimationRecord, ProposalRecord } from './types'
 
@@ -267,7 +268,7 @@ function Proposal({
       {/* PROPOSED AMOUNT */}
       <input
         type="number"
-        placeholder="Enter Proposed Amount (₹)"
+        placeholder="Enter Proposed Amount"
         value={proposedAmount}
         onChange={(e) => setProposedAmount(e.target.value)}
       />
@@ -366,8 +367,6 @@ function Proposal({
               </button>
             )}
 
-            {" "}
-
             {/* SUBMIT FOR REVIEW */}
             {proposal.status === "Draft" && (
               <button
@@ -382,8 +381,6 @@ function Proposal({
                 Submit for Review
               </button>
             )}
-
-            {" "}
 
             {/* INTERNAL APPROVAL */}
             {proposal.status === "In Review" && (
@@ -400,8 +397,6 @@ function Proposal({
               </button>
             )}
 
-            {" "}
-
             {/* SEND PROPOSAL TO CLIENT */}
             {proposal.status === "Approved" && (
               <button
@@ -416,8 +411,6 @@ function Proposal({
                 Send to Client
               </button>
             )}
-
-            {" "}
 
             {/* CLIENT ACCEPTANCE */}
             {proposal.status === "Sent to Client" && (
@@ -434,28 +427,8 @@ function Proposal({
               </button>
             )}
 
-            {" "}
-
-            {/* CLIENT REQUESTS REVISION */}
-            {proposal.status === "Sent to Client" && (
-              <button
-                onClick={() =>
-                  updateProposalStatus(
-                    proposal.proposalId,
-                    proposal.revision,
-                    "Revision Requested"
-                  )
-                }
-              >
-                Request Revision
-              </button>
-            )}
-
-            {" "}
-
             {/* CREATE NEW REVISION */}
-            {(proposal.status === "Revision Requested" ||
-              proposal.status === "Sent to Client") && (
+            {proposal.status === "Sent to Client" && (
               <button
                 onClick={() =>
                   reviseProposal(

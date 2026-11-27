@@ -1,23 +1,34 @@
-import { useState } from 'react'
+import { useState } from "react"
 
-// Import Components
-import Dashboard from './Dashboard'
-import CreateOrder from './CreateOrder'
-import OrderList from './OrderList'
-import EditOrder from './EditOrder'
-import Navbar from './Navbar'
-import Customers from './Customers'
-import Estimation from './Estimation'
-import Proposal from './Proposal'
+// --------------------------------
+// IMPORT COMPONENTS
+// --------------------------------
+import "./App.css"
+import Dashboard from "./Dashboard"
+import CreateOrder from "./CreateOrder"
+import OrderList from "./OrderList"
+import EditOrder from "./EditOrder"
+import Navbar from "./Navbar"
+import Customers from "./Customers"
+import Estimation from "./Estimation"
+import Proposal from "./Proposal"
+import ProjectsWorkOrders from "./ProjectsWorkOrders"
 
-// Import Shared Types
+// --------------------------------
+// IMPORT SHARED TYPES
+// --------------------------------
 import type {
   Customer,
   Order,
   EstimationRecord,
-  ProposalRecord
-} from './types'
+  ProposalRecord,
+  WorkOrder,
+  Project,
+} from "./types"
 
+// --------------------------------
+// MAIN APPLICATION
+// --------------------------------
 function App() {
 
   // --------------------------------
@@ -29,16 +40,15 @@ function App() {
   // ORDER STATE VARIABLES
   // --------------------------------
   const [orderId, setOrderId] = useState("")
-  const [selectedCustomerId, setSelectedCustomerId] = useState("")
-
-  // Stores all orders
   const [orders, setOrders] = useState<Order[]>([])
 
-  // Stores original and edited Order IDs
+  // Store original Order ID
   const [originalOrder, setOriginalOrder] = useState("")
-  const [editingOrder, setEditingOrder] = useState("")
 
-  // Stores Order search text
+  // Store the complete Order being edited
+  const [editingOrder, setEditingOrder] = useState<Order | null>(null)
+
+  // Store Order search text
   const [searchOrder, setSearchOrder] = useState("")
 
   // --------------------------------
@@ -46,12 +56,12 @@ function App() {
   // --------------------------------
   const [customers, setCustomers] = useState<Customer[]>([])
 
-  // Stores Customer form values
+  // Store Customer form values
   const [newCustomerName, setNewCustomerName] = useState("")
   const [newCustomerEmail, setNewCustomerEmail] = useState("")
   const [newCustomerPhone, setNewCustomerPhone] = useState("")
 
-  // Stores Customer ID currently being edited
+  // Store Customer ID currently being edited
   const [editingCustomerId, setEditingCustomerId] = useState("")
 
   // --------------------------------
@@ -65,32 +75,56 @@ function App() {
   const [proposals, setProposals] = useState<ProposalRecord[]>([])
 
   // --------------------------------
+  // WORK ORDER STATE VARIABLES
+  // --------------------------------
+  const [workOrders, setWorkOrders] = useState<WorkOrder[]>([])
+
+  // --------------------------------
+  // PROJECT STATE VARIABLES
+  // --------------------------------
+  const [projects, setProjects] = useState<Project[]>([])
+
+  // --------------------------------
   // CREATE ORDER
   // --------------------------------
-  const createOrder = () => {
+  const createOrder = (proposal: ProposalRecord) => {
 
-    // Check required fields
-    if (orderId.trim() === "" || selectedCustomerId === "") {
-      alert("Please fill all fields")
+    // Check whether Order ID is entered
+    if (orderId.trim() === "") {
+      alert("Please enter an Order ID.")
+      return
+    }
+
+    // Check whether the selected Proposal is accepted
+    if (proposal.status !== "Accepted") {
+      alert("Only accepted Proposals can be used to create an Order.")
       return
     }
 
     // Check duplicate Order ID
     if (orders.some((order) => order.orderId === orderId.trim())) {
-      alert("Order ID already exists")
+      alert("Order ID already exists.")
       return
     }
 
-    // Create Order
-    setOrders([...orders, {
+    // Create Order using accepted Proposal details
+    const newOrder: Order = {
       orderId: orderId.trim(),
-      customerId: selectedCustomerId,
-      status: "Pending"
-    }])
+      customerId: proposal.customerId,
+      proposalId: proposal.proposalId,
+      proposalRevision: proposal.revision,
+      description: proposal.description,
+      proposedAmount: proposal.proposedAmount,
+      formalPoNumber: "",
+      formalPoDate: "",
+      status: "Draft",
+    }
 
-    // Clear form
+    // Save the new Order
+    setOrders((previousOrders) => [...previousOrders, newOrder])
+
+    // Clear Order ID field
     setOrderId("")
-    setSelectedCustomerId("")
 
     alert("Order created successfully!")
   }
@@ -98,22 +132,91 @@ function App() {
   // --------------------------------
   // DELETE ORDER
   // --------------------------------
-  const deleteOrder = (orderId: string) => {
+  // --------------------------------
+// DELETE ORDER
+// --------------------------------
+const deleteOrder = (orderId: string) => {
 
-    // Remove selected Order
-    setOrders(
-      orders.filter((order) => order.orderId !== orderId)
+  // Find Work Orders linked to this Order
+  const linkedWorkOrders = workOrders.filter(
+    (workOrder) => workOrder.orderId === orderId
+  )
+
+  // Find Projects linked to those Work Orders
+  const linkedProjects = projects.filter((project) =>
+    linkedWorkOrders.some(
+      (workOrder) => workOrder.workOrderId === project.workOrderId
     )
+  )
+
+  // Build deletion warning
+  let warningMessage = `Are you sure you want to delete Order ${orderId}?`
+
+  if (linkedWorkOrders.length > 0) {
+    warningMessage += `\n\n${linkedWorkOrders.length} linked Work Order(s) will also be deleted.`
   }
 
+  if (linkedProjects.length > 0) {
+    warningMessage += `\n${linkedProjects.length} linked Project(s) will also be deleted.`
+  }
+
+  warningMessage += "\n\nThis action cannot be undone."
+
+  // Ask for confirmation
+  const confirmed = window.confirm(warningMessage)
+
+  // Stop deletion if user cancels
+  if (!confirmed) {
+    return
+  }
+
+  // Delete linked Projects
+  setProjects((previousProjects) =>
+    previousProjects.filter(
+      (project) =>
+        !linkedWorkOrders.some(
+          (workOrder) =>
+            workOrder.workOrderId === project.workOrderId
+        )
+    )
+  )
+
+  // Delete linked Work Orders
+  setWorkOrders((previousWorkOrders) =>
+    previousWorkOrders.filter(
+      (workOrder) => workOrder.orderId !== orderId
+    )
+  )
+
+  // Delete selected Order
+  setOrders((previousOrders) =>
+    previousOrders.filter((order) => order.orderId !== orderId)
+  )
+
+  // Clear edit state if this Order was being edited
+  if (editingOrder?.orderId === orderId) {
+    setEditingOrder(null)
+    setOriginalOrder("")
+  }
+
+  alert("Order and its linked records deleted successfully!")
+}
   // --------------------------------
   // SELECT ORDER FOR EDITING
   // --------------------------------
   const editOrder = (order: Order) => {
 
-    // Store original and new Order ID
+    // Prevent editing an accepted Order
+    if (order.status === "Order Accepted") {
+      alert("Order Accepted cannot be edited.")
+      return
+    }
+
+    // Store original Order ID
     setOriginalOrder(order.orderId)
-    setEditingOrder(order.orderId)
+
+    // Load complete Order details into edit form
+    setEditingOrder({ ...order })
   }
 
   // --------------------------------
@@ -121,32 +224,83 @@ function App() {
   // --------------------------------
   const updateOrder = () => {
 
+    // Check whether an Order is selected
+    if (!editingOrder || originalOrder === "") {
+      alert("Please select an Order to edit.")
+      return
+    }
+
     // Check empty Order ID
-    if (editingOrder.trim() === "") {
-      alert("Please enter an Order ID")
+    const newOrderId = editingOrder.orderId.trim()
+
+    if (newOrderId === "") {
+      alert("Please enter an Order ID.")
       return
     }
 
-    // Check whether the new ID already exists
+    // Check empty Description
+    if (editingOrder.description.trim() === "") {
+      alert("Please enter the Order Description.")
+      return
+    }
+
+    // Check empty Proposed Amount
     if (
-      editingOrder.trim() !== originalOrder &&
-      orders.some((order) => order.orderId === editingOrder.trim())
+      editingOrder.proposedAmount.trim() === "" ||
+      Number(editingOrder.proposedAmount) < 0 ||
+      !Number.isFinite(Number(editingOrder.proposedAmount))
     ) {
-      alert("Order ID already exists")
+      alert("Please enter a valid Proposed Amount.")
       return
     }
 
-    // Update selected Order
-    setOrders(
-      orders.map((order) =>
+    // Find the original Order
+    const existingOrder = orders.find(
+      (order) => order.orderId === originalOrder
+    )
+
+    // Stop if the Order does not exist
+    if (!existingOrder) {
+      alert("The selected Order could not be found.")
+      return
+    }
+
+    // Prevent editing an accepted Order
+    if (existingOrder.status === "Order Accepted") {
+      alert("Order Accepted cannot be edited.")
+      setEditingOrder(null)
+      setOriginalOrder("")
+      return
+    }
+
+    // Check duplicate Order ID, excluding the original Order
+    const duplicateOrder = orders.some(
+      (order) =>
+        order.orderId !== originalOrder &&
+        order.orderId.toLowerCase() === newOrderId.toLowerCase()
+    )
+
+    if (duplicateOrder) {
+      alert("Order ID already exists.")
+      return
+    }
+
+    // Update editable Order details
+    setOrders((previousOrders) =>
+      previousOrders.map((order) =>
         order.orderId === originalOrder
-          ? { ...order, orderId: editingOrder.trim() }
+          ? {
+              ...order,
+              orderId: newOrderId,
+              description: editingOrder.description.trim(),
+              proposedAmount: editingOrder.proposedAmount.trim(),
+            }
           : order
       )
     )
 
     // Clear edit state
-    setEditingOrder("")
+    setEditingOrder(null)
     setOriginalOrder("")
 
     alert("Order updated successfully!")
@@ -157,14 +311,60 @@ function App() {
   // --------------------------------
   const updateStatus = (orderId: string, newStatus: string) => {
 
-    // Change status only for Pending Orders
-    setOrders(
-      orders.map((order) =>
-        order.orderId === orderId && order.status === "Pending"
-          ? { ...order, status: newStatus }
+    // Update only the valid Order status transitions
+    setOrders((previousOrders) =>
+      previousOrders.map((order) => {
+        if (order.orderId !== orderId) {
+          return order
+        }
+
+        // Draft to In Review
+        if (order.status === "Draft" && newStatus === "In Review") {
+          return { ...order, status: "In Review" }
+        }
+
+        // In Review to Approved
+        if (order.status === "In Review" && newStatus === "Approved") {
+          return { ...order, status: "Approved" }
+        }
+
+        // Formal Order Received to Order Accepted
+        if (
+          order.status === "Formal Order Received" &&
+          newStatus === "Order Accepted"
+        ) {
+          return { ...order, status: "Order Accepted" }
+        }
+
+        return order
+      })
+    )
+  }
+
+  // --------------------------------
+  // SAVE FORMAL PURCHASE ORDER
+  // --------------------------------
+  const saveFormalOrder = (
+    orderId: string,
+    poNumber: string,
+    poDate: string
+  ) => {
+
+    // Save formal PO details for the approved Order
+    setOrders((previousOrders) =>
+      previousOrders.map((order) =>
+        order.orderId === orderId && order.status === "Approved"
+          ? {
+              ...order,
+              formalPoNumber: poNumber,
+              formalPoDate: poDate,
+              status: "Formal Order Received",
+            }
           : order
       )
     )
+
+    alert("Formal Purchase Order recorded successfully!")
   }
 
   // --------------------------------
@@ -173,11 +373,16 @@ function App() {
   const totalOrders = orders.length
 
   const pendingOrders = orders.filter(
-    (order) => order.status === "Pending"
+    (order) =>
+      order.status === "Draft" ||
+      order.status === "In Review"
   ).length
 
   const approvedOrders = orders.filter(
-    (order) => order.status === "Approved"
+    (order) =>
+      order.status === "Approved" ||
+      order.status === "Formal Order Received" ||
+      order.status === "Order Accepted"
   ).length
 
   const rejectedOrders = orders.filter(
@@ -191,19 +396,22 @@ function App() {
 
     // Check required Customer name
     if (newCustomerName.trim() === "") {
-      alert("Please enter customer name")
+      alert("Please enter customer name.")
       return
     }
 
-    // Create Customer
-    setCustomers([...customers, {
+    // Generate Customer ID
+    const newCustomer: Customer = {
       customerId: `CUS${customers.length + 1}`,
       name: newCustomerName.trim(),
       email: newCustomerEmail.trim(),
-      phone: newCustomerPhone.trim()
-    }])
+      phone: newCustomerPhone.trim(),
+    }
 
-    // Clear form
+    // Save Customer
+    setCustomers((previousCustomers) => [...previousCustomers, newCustomer])
+
+    // Clear Customer form
     setNewCustomerName("")
     setNewCustomerEmail("")
     setNewCustomerPhone("")
@@ -230,19 +438,19 @@ function App() {
 
     // Check Customer name
     if (newCustomerName.trim() === "") {
-      alert("Please enter customer name")
+      alert("Please enter customer name.")
       return
     }
 
     // Update selected Customer
-    setCustomers(
-      customers.map((customer) =>
+    setCustomers((previousCustomers) =>
+      previousCustomers.map((customer) =>
         customer.customerId === editingCustomerId
           ? {
               ...customer,
               name: newCustomerName.trim(),
               email: newCustomerEmail.trim(),
-              phone: newCustomerPhone.trim()
+              phone: newCustomerPhone.trim(),
             }
           : customer
       )
@@ -267,14 +475,17 @@ function App() {
     estimatedAmount: string
   ) => {
 
-    // Add new Estimation
-    setEstimations([...estimations, {
+    // Create new Estimation
+    const newEstimation: EstimationRecord = {
       estimationId,
       customerId,
       description,
       estimatedAmount,
-      status: "Draft"
-    }])
+      status: "Draft",
+    }
+
+    // Save Estimation
+    setEstimations((previousEstimations) => [...previousEstimations, newEstimation])
   }
 
   // --------------------------------
@@ -283,8 +494,8 @@ function App() {
   const submitEstimation = (estimationId: string) => {
 
     // Change Draft to In Review
-    setEstimations(
-      estimations.map((estimation) =>
+    setEstimations((previousEstimations) =>
+      previousEstimations.map((estimation) =>
         estimation.estimationId === estimationId &&
         estimation.status === "Draft"
           ? { ...estimation, status: "In Review" }
@@ -299,8 +510,8 @@ function App() {
   const approveEstimation = (estimationId: string) => {
 
     // Change In Review to Approved
-    setEstimations(
-      estimations.map((estimation) =>
+    setEstimations((previousEstimations) =>
+      previousEstimations.map((estimation) =>
         estimation.estimationId === estimationId &&
         estimation.status === "In Review"
           ? { ...estimation, status: "Approved" }
@@ -320,16 +531,19 @@ function App() {
     proposedAmount: string
   ) => {
 
-    // Add new Proposal R0
-    setProposals([...proposals, {
+    // Create initial Proposal revision
+    const newProposal: ProposalRecord = {
       proposalId,
       revision: 0,
       estimationId,
       customerId,
       description,
       proposedAmount,
-      status: "Draft"
-    }])
+      status: "Draft",
+    }
+
+    // Save Proposal
+    setProposals((previousProposals) => [...previousProposals, newProposal])
   }
 
   // --------------------------------
@@ -341,9 +555,9 @@ function App() {
     newStatus: string
   ) => {
 
-    // Update only the matching Proposal revision
-    setProposals(
-      proposals.map((proposal) =>
+    // Update matching Proposal revision
+    setProposals((previousProposals) =>
+      previousProposals.map((proposal) =>
         proposal.proposalId === proposalId &&
         proposal.revision === revision
           ? { ...proposal, status: newStatus }
@@ -363,15 +577,15 @@ function App() {
   ) => {
 
     // Update only the matching Draft revision
-    setProposals(
-      proposals.map((proposal) =>
+    setProposals((previousProposals) =>
+      previousProposals.map((proposal) =>
         proposal.proposalId === proposalId &&
         proposal.revision === revision &&
         proposal.status === "Draft"
           ? {
               ...proposal,
               description,
-              proposedAmount
+              proposedAmount,
             }
           : proposal
       )
@@ -409,7 +623,7 @@ function App() {
     // Calculate next revision number
     const newRevision = revision + 1
 
-    // Update the previous version to Revision
+    // Update previous revision
     const updatedProposals = proposals.map((proposal) =>
       proposal.proposalId === proposalId &&
       proposal.revision === revision
@@ -421,11 +635,76 @@ function App() {
     const revisedProposal: ProposalRecord = {
       ...existingProposal,
       revision: newRevision,
-      status: "Draft"
+      status: "Draft",
     }
 
     // Keep previous revision and add new revision
     setProposals([...updatedProposals, revisedProposal])
+  }
+
+  // --------------------------------
+  // CREATE WORK ORDER
+  // --------------------------------
+  const createWorkOrder = (order: Order, workOrderDate: string) => {
+
+    // Check whether a Work Order already exists for this Order
+    if (workOrders.some((item) => item.orderId === order.orderId)) {
+      alert("A Work Order already exists for this Order.")
+      return
+    }
+
+    // Generate the next Work Order ID
+    const newWorkOrderId = `WO${String(workOrders.length + 1).padStart(3, "0")}`
+
+    // Create Work Order using existing Order details
+    const newWorkOrder: WorkOrder = {
+      workOrderId: newWorkOrderId,
+      orderId: order.orderId,
+      customerId: order.customerId,
+      description: order.description,
+      workOrderDate,
+      status: "Created",
+    }
+
+    // Save the new Work Order
+    setWorkOrders((previousWorkOrders) => [...previousWorkOrders, newWorkOrder])
+
+    alert("Work Order created successfully!")
+  }
+
+  // --------------------------------
+  // CREATE PROJECT
+  // --------------------------------
+  const createProject = (
+    workOrder: WorkOrder,
+    projectName: string,
+    startDate: string,
+    targetCompletionDate: string
+  ) => {
+
+    // Check whether a Project already exists for this Work Order
+    if (projects.some((item) => item.workOrderId === workOrder.workOrderId)) {
+      alert("A Project already exists for this Work Order.")
+      return
+    }
+
+    // Generate the next Project ID
+    const newProjectId = `PRJ${String(projects.length + 1).padStart(3, "0")}`
+
+    // Create Project using selected Work Order
+    const newProject: Project = {
+      projectId: newProjectId,
+      workOrderId: workOrder.workOrderId,
+      projectName,
+      startDate,
+      targetCompletionDate,
+      status: "Created",
+    }
+
+    // Save the new Project
+    setProjects((previousProjects) => [...previousProjects, newProject])
+
+    alert("Project created successfully!")
   }
 
   // --------------------------------
@@ -498,9 +777,7 @@ function App() {
           <CreateOrder
             orderId={orderId}
             setOrderId={setOrderId}
-            selectedCustomerId={selectedCustomerId}
-            setSelectedCustomerId={setSelectedCustomerId}
-            customers={customers}
+            proposals={proposals}
             createOrder={createOrder}
           />
 
@@ -512,14 +789,28 @@ function App() {
             editOrder={editOrder}
             deleteOrder={deleteOrder}
             updateStatus={updateStatus}
+            saveFormalOrder={saveFormalOrder}
           />
 
           <EditOrder
             editingOrder={editingOrder}
             setEditingOrder={setEditingOrder}
+            customers={customers}
             updateOrder={updateOrder}
           />
         </>
+      )}
+
+      {/* PROJECTS & WORK ORDERS */}
+      {activePage === "Projects & Work Orders" && (
+        <ProjectsWorkOrders
+          orders={orders}
+          customers={customers}
+          workOrders={workOrders}
+          projects={projects}
+          createWorkOrder={createWorkOrder}
+          createProject={createProject}
+        />
       )}
     </div>
   )

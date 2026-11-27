@@ -1,6 +1,7 @@
-// --------------------------------
-// NAVBAR COMPONENT PROPS
-// --------------------------------
+
+ // --------------------------------
+ // NAVBAR COMPONENT PROPS
+ // --------------------------------
 type NavbarProps = {
   activePage: string
   setActivePage: (page: string) => void
@@ -22,7 +23,8 @@ function Navbar({
     "Customers",
     "Estimation",
     "Proposals",
-    "Orders"
+    "Orders",
+    "Projects & Work Orders"
   ]
 
   // --------------------------------

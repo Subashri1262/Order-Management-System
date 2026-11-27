@@ -1,39 +1,60 @@
-import type { Customer } from './types'
 
-// --------------------------------
-// CREATE ORDER COMPONENT PROPS
-// --------------------------------
-type CreateOrderProps = {
-  orderId: string
-  setOrderId: (value: string) => void
-
-  selectedCustomerId: string
-  setSelectedCustomerId: (value: string) => void
-
-  customers: Customer[]
-  createOrder: () => void
-}
+import { useState } from "react"
+import type { ProposalRecord } from "./types"
 
 // --------------------------------
 // CREATE ORDER COMPONENT
 // --------------------------------
+type Props = {
+  orderId: string
+  setOrderId: (value: string) => void
+  proposals: ProposalRecord[]
+  createOrder: (proposal: ProposalRecord) => void
+}
+
 function CreateOrder({
   orderId,
   setOrderId,
-  selectedCustomerId,
-  setSelectedCustomerId,
-  customers,
-  createOrder
-}: CreateOrderProps) {
+  proposals,
+  createOrder,
+}: Props) {
+  // Show only Proposals accepted by the client
+  const acceptedProposals = proposals.filter(
+    (proposal) => proposal.status === "Accepted"
+  )
+
+  // Store the selected Proposal and revision
+  const [selectedProposalId, setSelectedProposalId] = useState("")
+
+  // Find the exact selected Proposal revision
+  const selectedProposal = acceptedProposals.find(
+    (proposal) =>
+      `${proposal.proposalId}-R${proposal.revision}` === selectedProposalId
+  )
 
   // --------------------------------
-  // DISPLAY CREATE ORDER FORM
+  // CREATE ORDER
   // --------------------------------
+  const handleCreateOrder = () => {
+    if (!orderId.trim()) {
+      alert("Please enter an Order ID.")
+      return
+    }
+
+    if (!selectedProposal) {
+      alert("Please select an accepted Proposal.")
+      return
+    }
+
+    createOrder(selectedProposal)
+    setSelectedProposalId("")
+  }
+
   return (
-    <div>
+    <div className="section">
       <h2>Create Order</h2>
 
-      {/* ORDER ID */}
+      {/* Enter Order ID */}
       <input
         type="text"
         placeholder="Enter Order ID"
@@ -41,31 +62,49 @@ function CreateOrder({
         onChange={(e) => setOrderId(e.target.value)}
       />
 
-      <br />
-
-      {/* SELECT CUSTOMER */}
+      {/* Select Accepted Proposal */}
       <select
-        value={selectedCustomerId}
-        onChange={(e) => setSelectedCustomerId(e.target.value)}
+        value={selectedProposalId}
+        onChange={(e) => setSelectedProposalId(e.target.value)}
       >
-        <option value="">Select Customer</option>
+        <option value="">Select Accepted Proposal</option>
 
-        {customers.map((customer) => (
+        {acceptedProposals.map((proposal) => (
           <option
-            key={customer.customerId}
-            value={customer.customerId}
+            key={`${proposal.proposalId}-R${proposal.revision}`}
+            value={`${proposal.proposalId}-R${proposal.revision}`}
           >
-            {customer.name}
+            {proposal.proposalId} - R{proposal.revision} - {proposal.description}
           </option>
         ))}
       </select>
 
-      <br />
+      {/* Display selected Proposal details */}
+      {selectedProposal && (
+        <div>
+          <p>
+            <strong>Customer ID:</strong> {selectedProposal.customerId}
+          </p>
 
-      {/* CREATE ORDER BUTTON */}
-      <button onClick={createOrder}>
+          <p>
+            <strong>Description:</strong> {selectedProposal.description}
+          </p>
+
+          <p>
+            <strong>Proposed Amount:</strong> {selectedProposal.proposedAmount}
+          </p>
+        </div>
+      )}
+
+      {/* Create Order Button */}
+      <button onClick={handleCreateOrder}>
         Create Order
       </button>
+
+      {/* Message when no accepted Proposals exist */}
+      {acceptedProposals.length === 0 && (
+        <p>No accepted Proposals available. Accept a Proposal first.</p>
+      )}
     </div>
   )
 }

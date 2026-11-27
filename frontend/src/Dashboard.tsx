@@ -1,6 +1,6 @@
-// --------------------------------
-// DASHBOARD COMPONENT PROPS
-// --------------------------------
+ // --------------------------------
+ // DASHBOARD COMPONENT PROPS
+ // --------------------------------
 type DashboardProps = {
   totalOrders: number
   pendingOrders: number
@@ -22,12 +22,30 @@ function Dashboard({
   // DISPLAY ORDER SUMMARY
   // --------------------------------
   return (
-    <div>
+    <div className="dashboard">
       <h2>Dashboard</h2>
-      <p>Total Orders: {totalOrders}</p>
-      <p>Pending Orders: {pendingOrders}</p>
-      <p>Approved Orders: {approvedOrders}</p>
-      <p>Rejected Orders: {rejectedOrders}</p>
+
+      <div className="dashboard-cards">
+        <div className="dashboard-card">
+          <h3>Total Orders</h3>
+          <p>{totalOrders}</p>
+        </div>
+
+        <div className="dashboard-card">
+          <h3>Pending Orders</h3>
+          <p>{pendingOrders}</p>
+        </div>
+
+        <div className="dashboard-card">
+          <h3>Approved Orders</h3>
+          <p>{approvedOrders}</p>
+        </div>
+
+        <div className="dashboard-card">
+          <h3>Rejected Orders</h3>
+          <p>{rejectedOrders}</p>
+        </div>
+      </div>
     </div>
   )
 }
