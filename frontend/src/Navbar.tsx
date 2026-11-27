@@ -1,35 +1,22 @@
-
- // --------------------------------
- // NAVBAR COMPONENT PROPS
- // --------------------------------
 type NavbarProps = {
   activePage: string
   setActivePage: (page: string) => void
 }
 
-// --------------------------------
-// NAVBAR COMPONENT
-// --------------------------------
-function Navbar({
-  activePage,
-  setActivePage
-}: NavbarProps) {
+function Navbar({ activePage, setActivePage }: NavbarProps) {
 
-  // --------------------------------
-  // NAVIGATION BUTTONS
-  // --------------------------------
+  // All available OMS modules
   const pages = [
     "Dashboard",
     "Customers",
     "Estimation",
     "Proposals",
     "Orders",
-    "Projects & Work Orders"
+    "Projects & Work Orders",
+    "Execution & Invoicing",
+    "Job Closure",
   ]
 
-  // --------------------------------
-  // DISPLAY NAVIGATION
-  // --------------------------------
   return (
     <div>
       {pages.map((page) => (

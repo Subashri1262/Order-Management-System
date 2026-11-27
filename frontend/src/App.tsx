@@ -1,8 +1,8 @@
 import { useState } from "react"
 
-// --------------------------------
-// IMPORT COMPONENTS
-// --------------------------------
+// ================================================
+// 1. IMPORT COMPONENTS
+// ================================================
 import "./App.css"
 import Dashboard from "./Dashboard"
 import CreateOrder from "./CreateOrder"
@@ -13,10 +13,12 @@ import Customers from "./Customers"
 import Estimation from "./Estimation"
 import Proposal from "./Proposal"
 import ProjectsWorkOrders from "./ProjectsWorkOrders"
+import ExecutionInvoicing from "./ExecutionInvoicing"
+import JobClosure from "./JobClosure"
 
-// --------------------------------
-// IMPORT SHARED TYPES
-// --------------------------------
+// ================================================
+// 2. IMPORT SHARED TYPES
+// ================================================
 import type {
   Customer,
   Order,
@@ -24,90 +26,83 @@ import type {
   ProposalRecord,
   WorkOrder,
   Project,
+  Invoice,
 } from "./types"
 
-// --------------------------------
-// MAIN APPLICATION
-// --------------------------------
+// ================================================
+// 3. MAIN APPLICATION
+// ================================================
 function App() {
 
-  // --------------------------------
-  // NAVIGATION STATE
-  // --------------------------------
+  // ================================================
+  // 4. APPLICATION NAVIGATION
+  // ================================================
   const [activePage, setActivePage] = useState("Dashboard")
 
-  // --------------------------------
-  // ORDER STATE VARIABLES
-  // --------------------------------
+  // ================================================
+  // 5. ORDER MODULE - STATE VARIABLES
+  // ================================================
   const [orderId, setOrderId] = useState("")
   const [orders, setOrders] = useState<Order[]>([])
-
-  // Store original Order ID
   const [originalOrder, setOriginalOrder] = useState("")
-
-  // Store the complete Order being edited
   const [editingOrder, setEditingOrder] = useState<Order | null>(null)
-
-  // Store Order search text
   const [searchOrder, setSearchOrder] = useState("")
 
-  // --------------------------------
-  // CUSTOMER STATE VARIABLES
-  // --------------------------------
+  // ================================================
+  // 6. CUSTOMER MODULE - STATE VARIABLES
+  // ================================================
   const [customers, setCustomers] = useState<Customer[]>([])
-
-  // Store Customer form values
   const [newCustomerName, setNewCustomerName] = useState("")
   const [newCustomerEmail, setNewCustomerEmail] = useState("")
   const [newCustomerPhone, setNewCustomerPhone] = useState("")
-
-  // Store Customer ID currently being edited
   const [editingCustomerId, setEditingCustomerId] = useState("")
 
-  // --------------------------------
-  // ESTIMATION STATE VARIABLES
-  // --------------------------------
+  // ================================================
+  // 7. ESTIMATION MODULE - STATE VARIABLES
+  // ================================================
   const [estimations, setEstimations] = useState<EstimationRecord[]>([])
 
-  // --------------------------------
-  // PROPOSAL STATE VARIABLES
-  // --------------------------------
+  // ================================================
+  // 8. PROPOSAL MODULE - STATE VARIABLES
+  // ================================================
   const [proposals, setProposals] = useState<ProposalRecord[]>([])
 
-  // --------------------------------
-  // WORK ORDER STATE VARIABLES
-  // --------------------------------
+  // ================================================
+  // 9. WORK ORDER MODULE - STATE VARIABLES
+  // ================================================
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>([])
 
-  // --------------------------------
-  // PROJECT STATE VARIABLES
-  // --------------------------------
+  // ================================================
+  // 10. PROJECT MODULE - STATE VARIABLES
+  // ================================================
   const [projects, setProjects] = useState<Project[]>([])
 
-  // --------------------------------
-  // CREATE ORDER
-  // --------------------------------
-  const createOrder = (proposal: ProposalRecord) => {
+  // ================================================
+  // 11. INVOICING MODULE - STATE VARIABLES
+  // ================================================
+  const [invoices, setInvoices] = useState<Invoice[]>([])
 
-    // Check whether Order ID is entered
+  // ================================================
+  // 12. ORDER MODULE - FUNCTIONS
+  // ================================================
+
+  // Create an Order from an accepted Proposal
+  const createOrder = (proposal: ProposalRecord) => {
     if (orderId.trim() === "") {
       alert("Please enter an Order ID.")
       return
     }
 
-    // Check whether the selected Proposal is accepted
     if (proposal.status !== "Accepted") {
       alert("Only accepted Proposals can be used to create an Order.")
       return
     }
 
-    // Check duplicate Order ID
     if (orders.some((order) => order.orderId === orderId.trim())) {
       alert("Order ID already exists.")
       return
     }
 
-    // Create Order using accepted Proposal details
     const newOrder: Order = {
       orderId: orderId.trim(),
       customerId: proposal.customerId,
@@ -120,117 +115,105 @@ function App() {
       status: "Draft",
     }
 
-    // Save the new Order
     setOrders((previousOrders) => [...previousOrders, newOrder])
-
-    // Clear Order ID field
     setOrderId("")
 
     alert("Order created successfully!")
   }
 
-  // --------------------------------
-  // DELETE ORDER
-  // --------------------------------
-  // --------------------------------
-// DELETE ORDER
-// --------------------------------
-const deleteOrder = (orderId: string) => {
-
-  // Find Work Orders linked to this Order
-  const linkedWorkOrders = workOrders.filter(
-    (workOrder) => workOrder.orderId === orderId
-  )
-
-  // Find Projects linked to those Work Orders
-  const linkedProjects = projects.filter((project) =>
-    linkedWorkOrders.some(
-      (workOrder) => workOrder.workOrderId === project.workOrderId
+  // Delete an Order and its linked Work Orders, Projects and Invoices
+  const deleteOrder = (orderId: string) => {
+    const linkedWorkOrders = workOrders.filter(
+      (workOrder) => workOrder.orderId === orderId
     )
-  )
 
-  // Build deletion warning
-  let warningMessage = `Are you sure you want to delete Order ${orderId}?`
-
-  if (linkedWorkOrders.length > 0) {
-    warningMessage += `\n\n${linkedWorkOrders.length} linked Work Order(s) will also be deleted.`
-  }
-
-  if (linkedProjects.length > 0) {
-    warningMessage += `\n${linkedProjects.length} linked Project(s) will also be deleted.`
-  }
-
-  warningMessage += "\n\nThis action cannot be undone."
-
-  // Ask for confirmation
-  const confirmed = window.confirm(warningMessage)
-
-  // Stop deletion if user cancels
-  if (!confirmed) {
-    return
-  }
-
-  // Delete linked Projects
-  setProjects((previousProjects) =>
-    previousProjects.filter(
-      (project) =>
-        !linkedWorkOrders.some(
-          (workOrder) =>
-            workOrder.workOrderId === project.workOrderId
-        )
+    const linkedProjects = projects.filter((project) =>
+      linkedWorkOrders.some(
+        (workOrder) => workOrder.workOrderId === project.workOrderId
+      )
     )
-  )
 
-  // Delete linked Work Orders
-  setWorkOrders((previousWorkOrders) =>
-    previousWorkOrders.filter(
-      (workOrder) => workOrder.orderId !== orderId
+    const linkedInvoices = invoices.filter((invoice) =>
+      linkedProjects.some(
+        (project) => project.projectId === invoice.projectId
+      )
     )
-  )
 
-  // Delete selected Order
-  setOrders((previousOrders) =>
-    previousOrders.filter((order) => order.orderId !== orderId)
-  )
+    let warningMessage = `Are you sure you want to delete Order ${orderId}?`
 
-  // Clear edit state if this Order was being edited
-  if (editingOrder?.orderId === orderId) {
-    setEditingOrder(null)
-    setOriginalOrder("")
+    if (linkedWorkOrders.length > 0) {
+      warningMessage += `\n\n${linkedWorkOrders.length} linked Work Order(s) will also be deleted.`
+    }
+
+    if (linkedProjects.length > 0) {
+      warningMessage += `\n${linkedProjects.length} linked Project(s) will also be deleted.`
+    }
+
+    if (linkedInvoices.length > 0) {
+      warningMessage += `\n${linkedInvoices.length} linked Invoice(s) will also be deleted.`
+    }
+
+    warningMessage += "\n\nThis action cannot be undone."
+
+    if (!window.confirm(warningMessage)) {
+      return
+    }
+
+    // Delete linked records first
+    setInvoices((previousInvoices) =>
+      previousInvoices.filter(
+        (invoice) =>
+          !linkedProjects.some(
+            (project) => project.projectId === invoice.projectId
+          )
+      )
+    )
+
+    setProjects((previousProjects) =>
+      previousProjects.filter(
+        (project) =>
+          !linkedWorkOrders.some(
+            (workOrder) => workOrder.workOrderId === project.workOrderId
+          )
+      )
+    )
+
+    setWorkOrders((previousWorkOrders) =>
+      previousWorkOrders.filter(
+        (workOrder) => workOrder.orderId !== orderId
+      )
+    )
+
+    setOrders((previousOrders) =>
+      previousOrders.filter((order) => order.orderId !== orderId)
+    )
+
+    if (editingOrder?.orderId === orderId) {
+      setEditingOrder(null)
+      setOriginalOrder("")
+    }
+
+    alert("Order and its linked records deleted successfully!")
   }
 
-  alert("Order and its linked records deleted successfully!")
-}
-  // --------------------------------
-  // SELECT ORDER FOR EDITING
-  // --------------------------------
+  // Select an Order for editing
   const editOrder = (order: Order) => {
-
-    // Prevent editing an accepted Order
     if (order.status === "Order Accepted") {
       alert("Order Accepted cannot be edited.")
       return
     }
 
-    // Store original Order ID
     setOriginalOrder(order.orderId)
-
-    // Load complete Order details into edit form
     setEditingOrder({ ...order })
   }
 
-  // --------------------------------
-  // UPDATE ORDER
-  // --------------------------------
+  // Save changes to the selected Order
   const updateOrder = () => {
-
-    // Check whether an Order is selected
     if (!editingOrder || originalOrder === "") {
       alert("Please select an Order to edit.")
       return
     }
 
-    // Check empty Order ID
     const newOrderId = editingOrder.orderId.trim()
 
     if (newOrderId === "") {
@@ -238,13 +221,11 @@ const deleteOrder = (orderId: string) => {
       return
     }
 
-    // Check empty Description
     if (editingOrder.description.trim() === "") {
       alert("Please enter the Order Description.")
       return
     }
 
-    // Check empty Proposed Amount
     if (
       editingOrder.proposedAmount.trim() === "" ||
       Number(editingOrder.proposedAmount) < 0 ||
@@ -254,18 +235,15 @@ const deleteOrder = (orderId: string) => {
       return
     }
 
-    // Find the original Order
     const existingOrder = orders.find(
       (order) => order.orderId === originalOrder
     )
 
-    // Stop if the Order does not exist
     if (!existingOrder) {
       alert("The selected Order could not be found.")
       return
     }
 
-    // Prevent editing an accepted Order
     if (existingOrder.status === "Order Accepted") {
       alert("Order Accepted cannot be edited.")
       setEditingOrder(null)
@@ -273,7 +251,6 @@ const deleteOrder = (orderId: string) => {
       return
     }
 
-    // Check duplicate Order ID, excluding the original Order
     const duplicateOrder = orders.some(
       (order) =>
         order.orderId !== originalOrder &&
@@ -285,7 +262,6 @@ const deleteOrder = (orderId: string) => {
       return
     }
 
-    // Update editable Order details
     setOrders((previousOrders) =>
       previousOrders.map((order) =>
         order.orderId === originalOrder
@@ -299,36 +275,28 @@ const deleteOrder = (orderId: string) => {
       )
     )
 
-    // Clear edit state
     setEditingOrder(null)
     setOriginalOrder("")
 
     alert("Order updated successfully!")
   }
 
-  // --------------------------------
-  // UPDATE ORDER STATUS
-  // --------------------------------
+  // Update Order status based on valid workflow transitions
   const updateStatus = (orderId: string, newStatus: string) => {
-
-    // Update only the valid Order status transitions
     setOrders((previousOrders) =>
       previousOrders.map((order) => {
         if (order.orderId !== orderId) {
           return order
         }
 
-        // Draft to In Review
         if (order.status === "Draft" && newStatus === "In Review") {
           return { ...order, status: "In Review" }
         }
 
-        // In Review to Approved
         if (order.status === "In Review" && newStatus === "Approved") {
           return { ...order, status: "Approved" }
         }
 
-        // Formal Order Received to Order Accepted
         if (
           order.status === "Formal Order Received" &&
           newStatus === "Order Accepted"
@@ -341,16 +309,12 @@ const deleteOrder = (orderId: string) => {
     )
   }
 
-  // --------------------------------
-  // SAVE FORMAL PURCHASE ORDER
-  // --------------------------------
+  // Record the customer's formal Purchase Order
   const saveFormalOrder = (
     orderId: string,
     poNumber: string,
     poDate: string
   ) => {
-
-    // Save formal PO details for the approved Order
     setOrders((previousOrders) =>
       previousOrders.map((order) =>
         order.orderId === orderId && order.status === "Approved"
@@ -367,9 +331,7 @@ const deleteOrder = (orderId: string) => {
     alert("Formal Purchase Order recorded successfully!")
   }
 
-  // --------------------------------
-  // ORDER SUMMARY
-  // --------------------------------
+  // Calculate Order summary for Dashboard
   const totalOrders = orders.length
 
   const pendingOrders = orders.filter(
@@ -389,18 +351,17 @@ const deleteOrder = (orderId: string) => {
     (order) => order.status === "Rejected"
   ).length
 
-  // --------------------------------
-  // CREATE CUSTOMER
-  // --------------------------------
-  const createCustomer = () => {
+  // ================================================
+  // 13. CUSTOMER MODULE - FUNCTIONS
+  // ================================================
 
-    // Check required Customer name
+  // Create a new Customer
+  const createCustomer = () => {
     if (newCustomerName.trim() === "") {
       alert("Please enter customer name.")
       return
     }
 
-    // Generate Customer ID
     const newCustomer: Customer = {
       customerId: `CUS${customers.length + 1}`,
       name: newCustomerName.trim(),
@@ -408,10 +369,11 @@ const deleteOrder = (orderId: string) => {
       phone: newCustomerPhone.trim(),
     }
 
-    // Save Customer
-    setCustomers((previousCustomers) => [...previousCustomers, newCustomer])
+    setCustomers((previousCustomers) => [
+      ...previousCustomers,
+      newCustomer,
+    ])
 
-    // Clear Customer form
     setNewCustomerName("")
     setNewCustomerEmail("")
     setNewCustomerPhone("")
@@ -419,30 +381,21 @@ const deleteOrder = (orderId: string) => {
     alert("Customer created successfully!")
   }
 
-  // --------------------------------
-  // SELECT CUSTOMER FOR EDITING
-  // --------------------------------
+  // Load Customer details into the edit form
   const editCustomer = (customer: Customer) => {
-
-    // Load selected Customer details
     setEditingCustomerId(customer.customerId)
     setNewCustomerName(customer.name)
     setNewCustomerEmail(customer.email)
     setNewCustomerPhone(customer.phone)
   }
 
-  // --------------------------------
-  // UPDATE CUSTOMER
-  // --------------------------------
+  // Save changes to the selected Customer
   const updateCustomer = () => {
-
-    // Check Customer name
     if (newCustomerName.trim() === "") {
       alert("Please enter customer name.")
       return
     }
 
-    // Update selected Customer
     setCustomers((previousCustomers) =>
       previousCustomers.map((customer) =>
         customer.customerId === editingCustomerId
@@ -456,7 +409,6 @@ const deleteOrder = (orderId: string) => {
       )
     )
 
-    // Clear form and edit state
     setEditingCustomerId("")
     setNewCustomerName("")
     setNewCustomerEmail("")
@@ -465,17 +417,17 @@ const deleteOrder = (orderId: string) => {
     alert("Customer updated successfully!")
   }
 
-  // --------------------------------
-  // CREATE ESTIMATION
-  // --------------------------------
+  // ================================================
+  // 14. ESTIMATION MODULE - FUNCTIONS
+  // ================================================
+
+  // Create an Estimation
   const createEstimation = (
     estimationId: string,
     customerId: string,
     description: string,
     estimatedAmount: string
   ) => {
-
-    // Create new Estimation
     const newEstimation: EstimationRecord = {
       estimationId,
       customerId,
@@ -484,16 +436,14 @@ const deleteOrder = (orderId: string) => {
       status: "Draft",
     }
 
-    // Save Estimation
-    setEstimations((previousEstimations) => [...previousEstimations, newEstimation])
+    setEstimations((previousEstimations) => [
+      ...previousEstimations,
+      newEstimation,
+    ])
   }
 
-  // --------------------------------
-  // SUBMIT ESTIMATION FOR REVIEW
-  // --------------------------------
+  // Submit Estimation for review
   const submitEstimation = (estimationId: string) => {
-
-    // Change Draft to In Review
     setEstimations((previousEstimations) =>
       previousEstimations.map((estimation) =>
         estimation.estimationId === estimationId &&
@@ -504,12 +454,8 @@ const deleteOrder = (orderId: string) => {
     )
   }
 
-  // --------------------------------
-  // APPROVE ESTIMATION
-  // --------------------------------
+  // Approve Estimation
   const approveEstimation = (estimationId: string) => {
-
-    // Change In Review to Approved
     setEstimations((previousEstimations) =>
       previousEstimations.map((estimation) =>
         estimation.estimationId === estimationId &&
@@ -520,9 +466,11 @@ const deleteOrder = (orderId: string) => {
     )
   }
 
-  // --------------------------------
-  // CREATE PROPOSAL
-  // --------------------------------
+  // ================================================
+  // 15. PROPOSAL MODULE - FUNCTIONS
+  // ================================================
+
+  // Create the first Proposal revision
   const createProposal = (
     proposalId: string,
     estimationId: string,
@@ -530,8 +478,6 @@ const deleteOrder = (orderId: string) => {
     description: string,
     proposedAmount: string
   ) => {
-
-    // Create initial Proposal revision
     const newProposal: ProposalRecord = {
       proposalId,
       revision: 0,
@@ -542,20 +488,18 @@ const deleteOrder = (orderId: string) => {
       status: "Draft",
     }
 
-    // Save Proposal
-    setProposals((previousProposals) => [...previousProposals, newProposal])
+    setProposals((previousProposals) => [
+      ...previousProposals,
+      newProposal,
+    ])
   }
 
-  // --------------------------------
-  // UPDATE PROPOSAL STATUS
-  // --------------------------------
+  // Update Proposal status
   const updateProposalStatus = (
     proposalId: string,
     revision: number,
     newStatus: string
   ) => {
-
-    // Update matching Proposal revision
     setProposals((previousProposals) =>
       previousProposals.map((proposal) =>
         proposal.proposalId === proposalId &&
@@ -566,17 +510,13 @@ const deleteOrder = (orderId: string) => {
     )
   }
 
-  // --------------------------------
-  // UPDATE PROPOSAL DETAILS
-  // --------------------------------
+  // Update Proposal details
   const updateProposalDetails = (
     proposalId: string,
     revision: number,
     description: string,
     proposedAmount: string
   ) => {
-
-    // Update only the matching Draft revision
     setProposals((previousProposals) =>
       previousProposals.map((proposal) =>
         proposal.proposalId === proposalId &&
@@ -592,27 +532,21 @@ const deleteOrder = (orderId: string) => {
     )
   }
 
-  // --------------------------------
-  // CREATE PROPOSAL REVISION
-  // --------------------------------
+  // Create a new Proposal revision while preserving the previous one
   const reviseProposal = (
     proposalId: string,
     revision: number
   ) => {
-
-    // Find the Proposal revision
     const existingProposal = proposals.find(
       (proposal) =>
         proposal.proposalId === proposalId &&
         proposal.revision === revision
     )
 
-    // Stop if the Proposal does not exist
     if (!existingProposal) {
       return
     }
 
-    // Allow revision only for these statuses
     if (
       existingProposal.status !== "Revision Requested" &&
       existingProposal.status !== "Sent to Client"
@@ -620,10 +554,8 @@ const deleteOrder = (orderId: string) => {
       return
     }
 
-    // Calculate next revision number
     const newRevision = revision + 1
 
-    // Update previous revision
     const updatedProposals = proposals.map((proposal) =>
       proposal.proposalId === proposalId &&
       proposal.revision === revision
@@ -631,32 +563,28 @@ const deleteOrder = (orderId: string) => {
         : proposal
     )
 
-    // Create new revision by copying previous details
     const revisedProposal: ProposalRecord = {
       ...existingProposal,
       revision: newRevision,
       status: "Draft",
     }
 
-    // Keep previous revision and add new revision
     setProposals([...updatedProposals, revisedProposal])
   }
 
-  // --------------------------------
-  // CREATE WORK ORDER
-  // --------------------------------
-  const createWorkOrder = (order: Order, workOrderDate: string) => {
+  // ================================================
+  // 16. WORK ORDER MODULE - FUNCTIONS
+  // ================================================
 
-    // Check whether a Work Order already exists for this Order
+  // Create a Work Order from an accepted Client Order
+  const createWorkOrder = (order: Order, workOrderDate: string) => {
     if (workOrders.some((item) => item.orderId === order.orderId)) {
       alert("A Work Order already exists for this Order.")
       return
     }
 
-    // Generate the next Work Order ID
     const newWorkOrderId = `WO${String(workOrders.length + 1).padStart(3, "0")}`
 
-    // Create Work Order using existing Order details
     const newWorkOrder: WorkOrder = {
       workOrderId: newWorkOrderId,
       orderId: order.orderId,
@@ -664,34 +592,78 @@ const deleteOrder = (orderId: string) => {
       description: order.description,
       workOrderDate,
       status: "Created",
+      progress: 0,
+      progressDescription: "",
     }
 
-    // Save the new Work Order
-    setWorkOrders((previousWorkOrders) => [...previousWorkOrders, newWorkOrder])
+    setWorkOrders((previousWorkOrders) => [
+      ...previousWorkOrders,
+      newWorkOrder,
+    ])
 
     alert("Work Order created successfully!")
   }
 
-  // --------------------------------
-  // CREATE PROJECT
-  // --------------------------------
+  // Update the latest Work Order progress
+  const updateWorkOrderProgress = (
+    workOrderId: string,
+    progress: number,
+    progressDescription: string
+  ) => {
+    if (progress < 0 || progress > 100) {
+      alert("Progress must be between 0 and 100.")
+      return
+    }
+
+    // Do not allow progress changes after formal closure
+    const selectedWorkOrder = workOrders.find(
+      (workOrder) => workOrder.workOrderId === workOrderId
+    )
+
+    if (!selectedWorkOrder || selectedWorkOrder.status === "Closed") {
+      alert("A closed Work Order cannot be updated.")
+      return
+    }
+
+    setWorkOrders((previousWorkOrders) =>
+      previousWorkOrders.map((workOrder) =>
+        workOrder.workOrderId === workOrderId
+          ? {
+              ...workOrder,
+              progress,
+              progressDescription,
+              status:
+                progress === 100
+                  ? "Completed"
+                  : progress > 0
+                  ? "In Progress"
+                  : "Created",
+            }
+          : workOrder
+      )
+    )
+
+    alert("Work Order progress updated successfully!")
+  }
+
+  // ================================================
+  // 17. PROJECT MODULE - FUNCTIONS
+  // ================================================
+
+  // Create a Project from a Work Order
   const createProject = (
     workOrder: WorkOrder,
     projectName: string,
     startDate: string,
     targetCompletionDate: string
   ) => {
-
-    // Check whether a Project already exists for this Work Order
     if (projects.some((item) => item.workOrderId === workOrder.workOrderId)) {
       alert("A Project already exists for this Work Order.")
       return
     }
 
-    // Generate the next Project ID
     const newProjectId = `PRJ${String(projects.length + 1).padStart(3, "0")}`
 
-    // Create Project using selected Work Order
     const newProject: Project = {
       projectId: newProjectId,
       workOrderId: workOrder.workOrderId,
@@ -701,20 +673,136 @@ const deleteOrder = (orderId: string) => {
       status: "Created",
     }
 
-    // Save the new Project
-    setProjects((previousProjects) => [...previousProjects, newProject])
+    setProjects((previousProjects) => [
+      ...previousProjects,
+      newProject,
+    ])
 
     alert("Project created successfully!")
   }
 
-  // --------------------------------
-  // DISPLAY APPLICATION
-  // --------------------------------
+  // ================================================
+  // 18. INVOICING MODULE - FUNCTIONS
+  // ================================================
+
+  // Create a milestone invoice for a Project
+  const createInvoice = (
+    project: Project,
+    milestoneName: string,
+    amount: string,
+    invoiceDate: string
+  ) => {
+    if (milestoneName.trim() === "") {
+      alert("Please enter a milestone name.")
+      return
+    }
+
+    if (
+      amount.trim() === "" ||
+      !Number.isFinite(Number(amount)) ||
+      Number(amount) <= 0
+    ) {
+      alert("Please enter a valid invoice amount.")
+      return
+    }
+
+    if (invoiceDate.trim() === "") {
+      alert("Please select an invoice date.")
+      return
+    }
+
+    const newInvoiceId = `INV${String(invoices.length + 1).padStart(3, "0")}`
+
+    const newInvoice: Invoice = {
+      invoiceId: newInvoiceId,
+      projectId: project.projectId,
+      milestoneName: milestoneName.trim(),
+      amount: amount.trim(),
+      invoiceDate,
+      status: "Issued",
+    }
+
+    setInvoices((previousInvoices) => [
+      ...previousInvoices,
+      newInvoice,
+    ])
+
+    alert("Milestone invoice created successfully!")
+  }
+
+  // ================================================
+  // 19. JOB CLOSURE MODULE - FUNCTIONS
+  // ================================================
+
+  // Close a Work Order only after it reaches 100% completion
+  const closeWorkOrder = (workOrderId: string) => {
+    const selectedWorkOrder = workOrders.find(
+      (workOrder) => workOrder.workOrderId === workOrderId
+    )
+
+    if (!selectedWorkOrder || selectedWorkOrder.status !== "Completed") {
+      alert("Only completed Work Orders can be closed.")
+      return
+    }
+
+    if (!window.confirm("Are you sure you want to close this Work Order?")) {
+      return
+    }
+
+    setWorkOrders((previousWorkOrders) =>
+      previousWorkOrders.map((workOrder) =>
+        workOrder.workOrderId === workOrderId
+          ? { ...workOrder, status: "Closed" }
+          : workOrder
+      )
+    )
+
+    alert("Work Order closed successfully!")
+  }
+
+  // Close a Project only after its related Work Order is closed
+  const closeProject = (projectId: string) => {
+    const selectedProject = projects.find(
+      (project) => project.projectId === projectId
+    )
+
+    if (!selectedProject) {
+      alert("Project not found.")
+      return
+    }
+
+    const relatedWorkOrder = workOrders.find(
+      (workOrder) => workOrder.workOrderId === selectedProject.workOrderId
+    )
+
+    if (!relatedWorkOrder || relatedWorkOrder.status !== "Closed") {
+      alert("Close the related Work Order before closing this Project.")
+      return
+    }
+
+    if (!window.confirm("Are you sure you want to close this Project?")) {
+      return
+    }
+
+    setProjects((previousProjects) =>
+      previousProjects.map((project) =>
+        project.projectId === projectId
+          ? { ...project, status: "Closed" }
+          : project
+      )
+    )
+
+    alert("Project closed successfully!")
+  }
+
+  // ================================================
+  // 20. DISPLAY APPLICATION PAGES
+  // ================================================
   return (
     <div>
       <h1>Order Management System</h1>
 
-      {/* NAVIGATION */}
+      {/* MAIN NAVIGATION */}
       <Navbar
         activePage={activePage}
         setActivePage={setActivePage}
@@ -810,6 +898,28 @@ const deleteOrder = (orderId: string) => {
           projects={projects}
           createWorkOrder={createWorkOrder}
           createProject={createProject}
+        />
+      )}
+
+      {/* EXECUTION & INVOICING */}
+      {activePage === "Execution & Invoicing" && (
+        <ExecutionInvoicing
+          customers={customers}
+          workOrders={workOrders}
+          projects={projects}
+          invoices={invoices}
+          updateWorkOrderProgress={updateWorkOrderProgress}
+          createInvoice={createInvoice}
+        />
+      )}
+
+      {/* JOB CLOSURE */}
+      {activePage === "Job Closure" && (
+        <JobClosure
+          workOrders={workOrders}
+          projects={projects}
+          closeWorkOrder={closeWorkOrder}
+          closeProject={closeProject}
         />
       )}
     </div>

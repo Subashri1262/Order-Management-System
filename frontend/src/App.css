@@ -410,3 +410,186 @@ hr {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* --------------------------------
+   EXECUTION & INVOICING PAGE
+--------------------------------- */
+
+.execution-page {
+  margin-top: 20px;
+}
+
+.execution-page > h2 {
+  margin-top: 0;
+  margin-bottom: 18px;
+}
+
+/* Display both sections side by side */
+.execution-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  align-items: start;
+}
+
+/* Individual sections */
+.execution-panel {
+  background: #fff;
+  border: 1px solid #e1e7ef;
+  border-radius: 10px;
+  padding: 18px;
+  min-width: 0;
+}
+
+.execution-panel h3 {
+  margin: 0 0 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e1e7ef;
+}
+
+/* Compact form fields */
+.execution-panel label {
+  margin-top: 6px;
+}
+
+.execution-panel input,
+.execution-panel select,
+.execution-panel textarea {
+  max-width: 100%;
+  margin: 4px 0 8px;
+  padding: 8px 10px;
+}
+
+.execution-panel textarea {
+  min-height: 55px;
+}
+
+/* Related customer and project details */
+.execution-details {
+  background: #f4f7fb;
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin: 8px 0;
+}
+
+.execution-details p {
+  margin: 3px 0;
+}
+
+.execution-empty {
+  color: #64748b;
+  font-size: 13px;
+}
+
+/* Invoice records */
+.execution-invoice-list {
+  background: #fff;
+  border: 1px solid #e1e7ef;
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin-top: 16px;
+}
+
+.execution-invoice-list h3 {
+  margin: 0 0 10px;
+}
+
+.execution-table-container {
+  max-height: 180px;
+  overflow: auto;
+}
+
+.execution-table-container table {
+  margin: 0;
+  min-width: 580px;
+}
+
+.execution-table-container th,
+.execution-table-container td {
+  padding: 8px 10px;
+  font-size: 13px;
+}
+
+.execution-table-container th {
+  position: sticky;
+  top: 0;
+}
+
+/* Responsive layout for smaller screens */
+@media (max-width: 900px) {
+  .execution-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* --------------------------------
+   JOB CLOSURE PAGE
+--------------------------------- */
+
+.job-closure-page {
+  margin-top: 20px;
+}
+
+.job-closure-page > h2 {
+  margin-top: 0;
+  margin-bottom: 18px;
+}
+
+/* Display both closure sections side by side */
+.closure-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  align-items: start;
+}
+
+/* Closure sections */
+.closure-panel {
+  background: #fff;
+  border: 1px solid #e1e7ef;
+  border-radius: 10px;
+  padding: 18px;
+  min-width: 0;
+}
+
+.closure-panel h3 {
+  margin: 0 0 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e1e7ef;
+}
+
+/* Keep tables compact */
+.closure-table-container {
+  max-height: 260px;
+  overflow: auto;
+}
+
+.closure-table-container table {
+  margin: 0;
+  min-width: 480px;
+}
+
+.closure-table-container th,
+.closure-table-container td {
+  padding: 8px 10px;
+  font-size: 13px;
+}
+
+.closure-table-container th {
+  position: sticky;
+  top: 0;
+}
+
+.closure-empty {
+  color: #64748b;
+  font-size: 13px;
+}
+
+/* Responsive layout */
+@media (max-width: 900px) {
+  .closure-grid {
+    grid-template-columns: 1fr;
+  }
+}

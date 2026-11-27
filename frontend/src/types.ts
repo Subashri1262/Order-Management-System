@@ -1,3 +1,4 @@
+
 // --------------------------------
 // CUSTOMER TYPE
 // --------------------------------
@@ -65,6 +66,10 @@ export type WorkOrder = {
   description: string
   workOrderDate: string
   status: string
+
+  // Latest execution progress of this Work Order
+  progress: number
+  progressDescription: string
 }
 
 // --------------------------------
@@ -76,5 +81,17 @@ export type Project = {
   projectName: string
   startDate: string
   targetCompletionDate: string
+  status: string
+}
+
+// --------------------------------
+// INVOICE TYPE
+// --------------------------------
+export type Invoice = {
+  invoiceId: string
+  projectId: string
+  milestoneName: string
+  amount: string
+  invoiceDate: string
   status: string
 }
